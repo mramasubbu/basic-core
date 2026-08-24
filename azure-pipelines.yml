@@ -35,7 +35,7 @@ steps:
 - task: AzureWebApp@1
   displayName: 'Deploy to Azure App Service'
   inputs:
-    azureSubscription: 'Azure subscription 1'
+    azureSubscription: 'Azure-Ecommerce-Connection'
     appType: 'webAppLinux'
     appName: 'e-commerce-api'
     package: '$(Build.ArtifactStagingDirectory)'

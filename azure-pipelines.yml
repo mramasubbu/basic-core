@@ -3,6 +3,44 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
+# trigger:
+# - main
+
+# pool:
+#   vmImage: 'ubuntu-latest'
+
+# variables:
+#   buildConfiguration: 'Release'
+
+# steps:
+
+# - task: UseDotNet@2
+#   displayName: 'Install .NET 10 SDK'
+#   inputs:
+#     packageType: 'sdk'
+#     version: '10.x'
+
+# - script: dotnet restore
+#   displayName: 'Restore'
+
+# - script: dotnet build --configuration $(buildConfiguration) --no-restore
+#   displayName: 'Build'
+
+# - script: dotnet test --configuration $(buildConfiguration) --no-build
+#   displayName: 'Test'
+
+# - script: dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
+#   displayName: 'Publish'
+
+# - task: AzureWebApp@1
+#   displayName: 'Deploy to Azure App Service'
+#   inputs:
+#     azureSubscription: 'Azure-Ecommerce-Connection'
+#     appType: 'webAppLinux'
+#     appName: 'e-commerce-api'
+#     package: '$(Build.ArtifactStagingDirectory)'
+
+
 trigger:
 - main
 
@@ -11,31 +49,116 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
+  artifactName: 'drop'
 
-steps:
+stages:
 
-- task: UseDotNet@2
-  displayName: 'Install .NET 10 SDK'
-  inputs:
-    packageType: 'sdk'
-    version: '10.x'
+# ============================================================
+# CI STAGE
+# ============================================================
 
-- script: dotnet restore
-  displayName: 'Restore'
+- stage: CI
+  displayName: 'CI - Build, Test and Publish'
 
-- script: dotnet build --configuration $(buildConfiguration) --no-restore
-  displayName: 'Build'
+  jobs:
 
-- script: dotnet test --configuration $(buildConfiguration) --no-build
-  displayName: 'Test'
+  - job: Build
+    displayName: 'Build and Test'
 
-- script: dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
-  displayName: 'Publish'
+    steps:
 
-- task: AzureWebApp@1
-  displayName: 'Deploy to Azure App Service'
-  inputs:
-    azureSubscription: 'Azure-Ecommerce-Connection'
-    appType: 'webAppLinux'
-    appName: 'e-commerce-api'
-    package: '$(Build.ArtifactStagingDirectory)'
+    # --------------------------------------------------------
+    # Install .NET 10
+    # --------------------------------------------------------
+
+    - task: UseDotNet@2
+      displayName: 'Install .NET 10 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '10.x'
+
+    # --------------------------------------------------------
+    # Restore
+    # --------------------------------------------------------
+
+    - script: dotnet restore
+      displayName: 'Restore'
+
+    # --------------------------------------------------------
+    # Build
+    # --------------------------------------------------------
+
+    - script: dotnet build --configuration $(buildConfiguration) --no-restore
+      displayName: 'Build'
+
+    # --------------------------------------------------------
+    # Test
+    # --------------------------------------------------------
+
+    - script: dotnet test --configuration $(buildConfiguration) --no-build --verbosity normal
+      displayName: 'Test'
+
+    # --------------------------------------------------------
+    # Publish
+    # --------------------------------------------------------
+
+    - script: dotnet publish --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)
+      displayName: 'Publish'
+
+    # --------------------------------------------------------
+    # Publish Pipeline Artifact
+    # --------------------------------------------------------
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Pipeline Artifact'
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifact: '$(artifactName)'
+
+
+# ============================================================
+# CD STAGE
+# ============================================================
+
+- stage: CD
+  displayName: 'CD - Deploy to Azure App Service'
+
+  dependsOn: CI
+
+  condition: succeeded()
+
+  jobs:
+
+  - deployment: Deploy
+    displayName: 'Deploy to Azure'
+
+    environment: 'production'
+
+    strategy:
+      runOnce:
+
+        deploy:
+
+          steps:
+
+          # --------------------------------------------------
+          # Download Artifact
+          # --------------------------------------------------
+
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download Pipeline Artifact'
+            inputs:
+              artifact: '$(artifactName)'
+              path: '$(Pipeline.Workspace)/$(artifactName)'
+
+          # --------------------------------------------------
+          # Deploy to Azure App Service
+          # --------------------------------------------------
+
+          - task: AzureWebApp@1
+            displayName: 'Deploy to Azure App Service'
+            inputs:
+              azureSubscription: 'Azure-Ecommerce-Connection'
+              appType: 'webAppLinux'
+              appName: 'e-commerce-api'
+              package: '$(Pipeline.Workspace)/$(artifactName)'

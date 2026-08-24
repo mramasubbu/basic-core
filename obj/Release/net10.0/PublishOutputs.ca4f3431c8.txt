@@ -1,0 +1,7 @@
+C:\Users\mrams\source\repos\BasicCore\MyApi\publish\MyApi.exe
+C:\Users\mrams\source\repos\BasicCore\MyApi\publish\appsettings.Development.json
+C:\Users\mrams\source\repos\BasicCore\MyApi\publish\appsettings.json
+C:\Users\mrams\source\repos\BasicCore\MyApi\publish\MyApi.dll
+C:\Users\mrams\source\repos\BasicCore\MyApi\publish\MyApi.deps.json
+C:\Users\mrams\source\repos\BasicCore\MyApi\publish\MyApi.runtimeconfig.json
+C:\Users\mrams\source\repos\BasicCore\MyApi\publish\MyApi.pdb

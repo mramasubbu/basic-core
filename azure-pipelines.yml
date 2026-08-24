@@ -49,12 +49,12 @@ pool:
 
 variables:
   buildConfiguration: 'Release'
-  artifactName: 'drop'
+  artifactName: 'EcommerceApi'
 
 stages:
 
 # ============================================================
-# CI STAGE
+# CI - BUILD, TEST AND CREATE ARTIFACT
 # ============================================================
 
 - stage: CI
@@ -68,7 +68,7 @@ stages:
     steps:
 
     # --------------------------------------------------------
-    # Install .NET 10
+    # Install .NET 10 SDK
     # --------------------------------------------------------
 
     - task: UseDotNet@2
@@ -106,18 +106,18 @@ stages:
       displayName: 'Publish'
 
     # --------------------------------------------------------
-    # Publish Pipeline Artifact
+    # Create Pipeline Artifact
     # --------------------------------------------------------
 
     - task: PublishPipelineArtifact@1
-      displayName: 'Publish Pipeline Artifact'
+      displayName: 'Publish Ecommerce API Artifact'
       inputs:
         targetPath: '$(Build.ArtifactStagingDirectory)'
         artifact: '$(artifactName)'
 
 
 # ============================================================
-# CD STAGE
+# CD - DEPLOY ARTIFACT TO AZURE
 # ============================================================
 
 - stage: CD
@@ -130,7 +130,7 @@ stages:
   jobs:
 
   - deployment: Deploy
-    displayName: 'Deploy to Azure'
+    displayName: 'Deploy Ecommerce API'
 
     environment: 'production'
 
@@ -146,7 +146,7 @@ stages:
           # --------------------------------------------------
 
           - task: DownloadPipelineArtifact@2
-            displayName: 'Download Pipeline Artifact'
+            displayName: 'Download Ecommerce API Artifact'
             inputs:
               artifact: '$(artifactName)'
               path: '$(Pipeline.Workspace)/$(artifactName)'

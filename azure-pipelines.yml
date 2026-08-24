@@ -46,7 +46,7 @@ stages:
     - task: AzureWebAppContainer@1
       displayName: Deploy Docker image to Azure App Service
       inputs:
-        azureSubscription: 'AzureFreeSubscription'
-        appName: 'myapi-ramasubbu'
+        azureSubscription: 'Azure-Ecommerce-Connection'
+        appName: 'ecommerce-api-app'
         containers: |
           YOUR_ACR_NAME.azurecr.io/my-api:$(tag)
